@@ -1,78 +1,79 @@
-# React + TypeScript + Vite
+# Organizador de Candidaturas
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicação em **React.js + TypeScript + Vite** para organizar candidaturas a vagas
+de emprego: acompanhar status, entrevistas e o progresso do perfil.
 
-Currently, two official plugins are available:
+Projeto acadêmico — Universidade Católica do Salvador / Engenharia de Software.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Como executar
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+npm install
+npm run dev      # servidor de desenvolvimento (http://localhost:5173)
+npm run build    # build de produção (tsc + vite)
+npm run lint     # verificação de código (ESLint)
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+> Observação: caso o `npm install` falhe com o erro `Cannot read properties of
+> null (reading 'edgesOut')` (bug conhecido do resolvedor de dependências do
+> npm), use `npm install --legacy-peer-deps`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Arquitetura
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+A aplicação segue a arquitetura de componentes do React. O componente principal
+`src/App.tsx` orquestra todos os demais e injeta o provedor de estado global.
 
 ```
+src/
+├─ App.tsx                 # Componente principal (orquestra tudo)
+├─ context/
+│  ├─ toast-context.ts     # Contexto + hook useToast (estado global)
+│  └─ ToastContext.tsx     # ToastProvider (Context API)
+└─ components/
+   ├─ Accordion.tsx        # 1. Acordeão (FAQ)
+   ├─ Pagination.tsx       # 2. Paginação (lista de candidaturas)
+   ├─ ProgressBar.tsx      # 3. Barra de Progresso (perfil)
+   ├─ Tabs.tsx             # 4. Abas (perfil do usuário)
+   ├─ Dropdown.tsx         # 5. Menu Suspenso (filtro de status)
+   └─ Toast.tsx            # 6. Notificação Toast (feedback)
+```
+
+## Os 6 componentes obrigatórios
+
+| # | Componente | Onde é usado | Destaques |
+|---|------------|--------------|-----------|
+| 1 | **Acordeão** | Perguntas Frequentes | Um item aberto por vez, transição suave, `aria-expanded` |
+| 2 | **Paginação** | Lista de candidaturas | Anterior/Próxima desabilitados nos extremos, página atual com `aria-current` |
+| 3 | **Barra de Progresso** | Progresso do perfil | Valor 0–100 via props, `role="progressbar"` |
+| 4 | **Abas** | Perfil do usuário | Estado da aba ativa, navegação por teclado (setas), padrão ARIA Tabs |
+| 5 | **Menu Suspenso** | Filtro por status | Fecha ao selecionar, ao clicar fora e com Esc |
+| 6 | **Notificação Toast** | Feedback de ações | Tipos sucesso/erro/info, some sozinho, `aria-live` |
+
+## Conceitos de React demonstrados
+
+- **Componentes funcionais** com tipagem via TypeScript.
+- **Props** para passar dados e callbacks entre componentes.
+- **State local** com `useState` em cada componente interativo.
+- **Hooks**: `useState`, `useEffect` (fechar dropdown ao clicar fora),
+  `useMemo` (filtragem/paginação derivada), `useCallback`, `useContext`.
+- **Manipulação de eventos**: clique, teclado (`onKeyDown`), clique fora.
+
+## Responsividade
+
+Layout fluido com CSS Grid/Flexbox e `clamp()`. Breakpoints para tablet
+(`max-width: 720px`) e smartphone (`max-width: 480px`), além de respeitar
+`prefers-reduced-motion`.
+
+## Desafio Extra — Estado Global (Context API)
+
+As notificações Toast usam a **Context API** (`ToastProvider` + `useToast`),
+permitindo que qualquer componente dispare feedback sem passar props
+manualmente entre componentes não relacionados.
+
+## Acessibilidade
+
+- Tags semânticas HTML5 (`header`, `main`, `nav`, `section`, `footer`).
+- Atributos ARIA: `aria-expanded`, `aria-controls`, `aria-current`,
+  `aria-selected`, `role="progressbar"`, `role="tablist/tab/tabpanel"`,
+  `role="menu/menuitem"`, `aria-live`.
+- Foco visível via `:focus-visible` e navegação por teclado nas abas.
